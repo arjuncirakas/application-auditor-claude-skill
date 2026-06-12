@@ -9,6 +9,8 @@ You are running a complete production-readiness audit. The goal is not "a list o
 
 Do NOT stop for confirmation between phases. Do NOT summarize. The flat list IS the report.
 
+This is a defensive engagement: the codebase under audit is one the user owns or is authorized to test and modify. Find defects, prove them, and — in fix mode — remediate them. Do not produce working exploits, attack live systems, or probe anything outside this codebase.
+
 ## Core principles
 
 1. **Trust what the code does, not what it's called.** A function named `validatePermissions` proves nothing. Open it. Trace the actual path: UI → API → data layer → response → render.

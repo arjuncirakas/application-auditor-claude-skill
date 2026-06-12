@@ -6,6 +6,8 @@ Not using Claude Code? Paste everything below the line into any capable coding a
 
 Run a complete production-readiness audit of this codebase/product. Do not stop for confirmation. Do not summarize. The flat list IS the report.
 
+This is a defensive engagement: the codebase under audit is one the user owns or is authorized to test and modify. Find defects, prove them against the real code, and — when asked to fix — remediate them. Do not produce working exploits, attack live systems, or probe anything outside this codebase.
+
 PRINCIPLES
 - Trust what the code does, not what it's called. Open the file. Trace the real path: UI → API → data layer → response → render.
 - A public claim without implementing code is itself a HIGH finding (README, landing page, docs, security page — every specific promise gets verified).
