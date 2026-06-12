@@ -67,6 +67,8 @@ No executive summary. No "overall, the codebase is in good shape." Every row is 
 
 Rules the skill enforces on itself: every row has `file:line` or `URL + selector` (no location ⇒ dropped), no "consider/might/could", no padding, and an honest `TRUNCATED AT …` line if it runs out of context instead of a fake wrap-up.
 
+Want more? See the **[sample report](examples/sample-report.md)** — 30 anonymized rows from the real 1,200-finding run, plus both convergence ledgers.
+
 ## The 24 lenses
 
 Each discovery pass takes exactly one lens and sweeps the entire inventory through it — the diversity is what makes "we found everything" credible. Full catalog with a real example finding per lens in [audit-angles.md](production-audit/references/audit-angles.md).
@@ -212,7 +214,7 @@ The skill keeps a pass ledger — pass number, lens used, new findings count —
 
 ## Origin
 
-This skill was extracted from a real pre-launch audit of [Pulse](https://pulsehq.tech), a company brain built for the agent era. The 1,200-finding run this README opens with was our own codebase — we ran the loop until it converged, then open-sourced the methodology.
+This skill was extracted from a real pre-launch audit of [Pulse](https://pulsehq.tech?utm_source=github&utm_medium=production-audit), a company brain built for the agent era. The 1,200-finding run this README opens with was our own codebase — we ran the loop until it converged, then open-sourced the methodology.
 
 ## Contributing
 
