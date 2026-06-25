@@ -12,7 +12,7 @@ PRINCIPLES
 - Trust what the code does, not what it's called. Open the file. Trace the real path: UI → API → data layer → response → render.
 - A public claim without implementing code is itself a HIGH finding (README, landing page, docs, security page: every specific promise gets verified).
 - One pass is never enough. Audit in repeated passes, each from a DIFFERENT angle, until two consecutive passes surface zero new findings.
-- Attack every finding before reporting it: try to refute it against the real code (guard upstream? enforced elsewhere? actually unreachable?). If you can't pin it to file:line or URL+selector, drop it.
+- Verify every finding before reporting it: check it against the real code (guard upstream? enforced elsewhere? actually unreachable? does the test pass?). Verify, don't argue it away. If you can't pin it to file:line or URL+selector, drop it; if you can pin it but can't confirm it's safe, keep it and note the uncertainty (a located, uncleared security risk is reported, not dropped).
 - A short list means you didn't look hard enough. Real products carry hundreds of findings.
 
 PROCESS
@@ -43,8 +43,8 @@ PROCESS
    - Dependency & supply-chain: known CVEs in the lockfile, deprecated packages, unpinned versions, duplicate versions of one library, install scripts, license conflicts.
    - Caching correctness: cache keys missing tenant/user scope, stale after writes, authorization cached past revocation, CDN caching authenticated responses, localStorage surviving logout.
    - Concurrency & races: double-submit, two tabs, two workers on one job, webhooks delivered twice, check-then-act without unique constraints, last-write-wins edits, non-atomic counters, job locks that don't expire.
-4. Stop discovery only when two consecutive diverse passes find nothing new.
-5. If your harness supports subagents or parallel tasks, fan out one finder per lens/subsystem and route every candidate finding through a skeptic agent prompted to refute it. If not, run lenses sequentially yourself with the same skeptic step.
+4. Stop discovery only when two consecutive diverse passes find nothing new. Cap the loop: run every applicable lens at least once plus a ceiling of a few more passes; if you hit the cap first, report what you have and say so. Convergence is a strong heuristic for "looked hard enough", not a proof nothing remains. Before reporting, read `.audit-ignore` at the repo root if present and skip findings matching a confirmed-false-positive entry there (format `path:line  issue-tag  # reason`); never add entries yourself.
+5. If your harness supports subagents or parallel tasks, fan out one finder per lens/subsystem and route every candidate finding through a verifier in a fresh context (a different model if available), prompted to confirm or clear it against the code, not to argue it away. If not, run lenses sequentially yourself with the same verification step.
 
 SCOPING
 The user may scope the run (one subsystem like src/billing, one lens family like security, or docs-vs-code). Apply the same loop, lenses, and rules to the narrowed inventory. No scope given = the whole product.
@@ -73,4 +73,4 @@ HARD RULES
 - If you run out of context, end with exactly one line: TRUNCATED AT [area] - [N] inventory items unchecked. Nothing after it.
 
 IF ASKED TO FIX
-Fix in severity waves (1: CRITICAL+HIGH, 2: MEDIUM, 3: LOW+IMPROVEMENT), gating each wave on green clean build + typecheck + lint + full test suite, then reviewing every change for over-reach (anything changed beyond its finding gets reverted). Deferrals are listed with a reason, never silently dropped. Then run a verification loop: re-audit with fresh angles (regression, fix-completeness, over-reach; the same mistake is almost never made once) and fix what surfaces, round after round, until two consecutive passes find zero CRITICAL and zero HIGH. Expect 10+ rounds on a real codebase.
+Fix in severity waves (1: CRITICAL+HIGH, 2: MEDIUM, 3: LOW+IMPROVEMENT), gating each wave on green clean build + typecheck + lint + full test suite, then reviewing every change for over-reach (anything changed beyond its finding gets reverted). Deferrals are listed with a reason, never silently dropped. Then run a verification loop: re-audit with fresh angles (regression, fix-completeness, over-reach; the same mistake is almost never made once) and fix what surfaces, round after round, until two consecutive passes find zero CRITICAL and zero HIGH. Expect 10+ rounds on a real codebase; cap at a sane ceiling and report any still-open CRITICAL/HIGH rather than looping forever.

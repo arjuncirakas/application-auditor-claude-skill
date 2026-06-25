@@ -1,0 +1,14 @@
+{
+  "name": "apoorvjain25",
+  "owner": {
+    "name": "Apoorv Jain"
+  },
+  "plugins": [
+    {
+      "name": "production-audit",
+      "source": "./",
+      "skills": ["./production-audit"],
+      "description": "Exhaustive production-readiness audit: diverse-angle discovery to convergence, evidence-grounded per-finding verification, claim-vs-code checks, one flat severity-tagged list with file:line evidence."
+    }
+  ]
+}
