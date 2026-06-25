@@ -25,8 +25,8 @@ flowchart TD
     P0["Phase 0: Inventory<br/>every page, claim, endpoint, job,<br/>prompt, icon, email, locale"]
     P0 --> LENS["Pick a lens never used before<br/>(24 in the catalog)"]
     LENS --> SWEEP["Sweep the whole inventory through it"]
-    SWEEP --> ATTACK["Attack every candidate finding:<br/>try to refute it against the real code"]
-    ATTACK --> Q1{"Two consecutive passes<br/>with nothing new?"}
+    SWEEP --> VERIFY["Verify every candidate finding<br/>against the real code: trace the guard,<br/>run the test that settles it"]
+    VERIFY --> Q1{"Two consecutive passes<br/>with nothing new?"}
     Q1 -- "no" --> LENS
     Q1 -- "yes" --> REPORT["The report: one flat list<br/>[SEVERITY] [AREA] file:line - defect - fix"]
     REPORT -. "fix mode" .-> WAVE["Fix waves<br/>CRITICAL+HIGH → MEDIUM → LOW"]
@@ -45,10 +45,25 @@ The skill inventories every surface your product has (pages, routes, claims, job
 |---|---|---|
 | **Passes** | one | as many as it takes; stops after 2 consecutive quiet passes |
 | **Framing** | whatever the prompt happens to emphasize | 24 deliberately diverse lenses, never repeated |
-| **False positives** | reported confidently | every finding attacked against the real code before it's reported |
+| **False positives** | reported confidently | every finding verified against the real code before it's reported |
 | **Marketing claims** | ignored | every specific public promise verified or flagged |
 | **Output** | summary + a few highlights | flat list, every row pinned to `file:line` |
 | **"Done" means** | the context window filled up | convergence, proven twice over |
+
+## How it compares to other audit tools
+
+Multi-lens auditing and convergence-style stopping aren't unique to this skill. [RepoLens](https://github.com/TheMorpheus407/RepoLens), CheckLoop, and audit-loop all do versions of them, and Anthropic ships a built-in `/security-review`. What this skill adds is two things none of them do by default: it verifies your **public claims against the code**, and it **verifies every finding by default** (not as an opt-in flag) before reporting it.
+
+| | production-audit | RepoLens / audit-loop | `/security-review` |
+|---|---|---|---|
+| Multiple audit lenses | ✅ 24 | ✅ (RepoLens: many) | one (security) |
+| Convergence / self-terminating loop | ✅ (capped heuristic) | ✅ | single pass |
+| Claim-vs-code (marketing/docs vs implementation) | ✅ | ✗ | ✗ |
+| Per-finding verification | ✅ default-on | RepoLens: opt-in, off by default | ✅ |
+| Whole-repo (not just the diff) | ✅ | ✅ | diff-focused |
+| Output | flat `file:line` list, no summary | varies | inline PR comments |
+
+We didn't invent multi-lens or convergence. The edge is claim-vs-code plus verification-by-default.
 
 ## What a finding looks like
 
@@ -113,7 +128,14 @@ From real runs:
 
 ## Install
 
-**Claude Code**: copy the skill folder.
+**Claude Code (easiest)**: install as a plugin.
+
+```
+/plugin marketplace add apoorvjain25/production-audit
+/plugin install production-audit@apoorvjain25
+```
+
+**Claude Code (manual)**: copy the skill folder.
 
 ```bash
 git clone https://github.com/apoorvjain25/production-audit.git
@@ -139,6 +161,8 @@ Works on any stack: web app, API, CLI, mobile, monorepo. The skill builds its in
 
 > **Heads up:** the full pipeline is thorough by design. Discovery on a real product produces hundreds of rows, and `fix` mode will happily run 10+ verification rounds. Scope it if you want a quick pass.
 
+**Suppressing known false positives:** drop a `.audit-ignore` file at your repo root and future runs will skip findings you've already triaged. One entry per line, `path:line  issue-tag  # reason`, and the reason is required. The audit only reads this file; it never writes to it, so it can't quietly hide a real bug from you.
+
 ## Reading the report
 
 | Tag | Means | Example |
@@ -151,6 +175,15 @@ Works on any stack: web app, API, CLI, mobile, monorepo. The skill builds its in
 
 Rows are ordered CRITICAL → IMPROVEMENT and grouped by area (`SECURITY`, `AUTH`, `DATA`, `PERF`, `CONTENT`, ...) within each severity, so a team can fix top-down, row by row.
 
+## Limitations
+
+Worth knowing before you rely on it:
+
+- **Source-only.** It reads your code, config, and docs. It does not analyze binaries or containers, and supply-chain coverage stops at what the lockfile reveals.
+- **Not deterministic.** Two runs can surface different findings and stop at different points. It's an audit aid, not a reproducible compliance gate.
+- **Cost and time scale with the repo.** A full converged run on a large product takes hours and real token spend. Scope it when you don't need the whole thing.
+- **Convergence bounds, it doesn't prove.** Two quiet passes mean these 24 angles stopped finding things, not that nothing remains. It's a strong "we looked hard enough" heuristic with a cap, not a guarantee.
+
 ## What's in the box
 
 ```
@@ -159,9 +192,11 @@ production-audit/
 └── references/
     ├── audit-angles.md             # 24 discovery lenses, each with a real example finding
     └── finding-taxonomy.md         # 18 defect classes + severity rubric + borderline calls
+.claude-plugin/                     # plugin + marketplace manifests (for /plugin install)
 examples/
 └── sample-report.md                # 30 anonymized rows + both convergence ledgers
 PROMPT.md                           # the whole methodology in one paste-able file
+CHANGELOG.md                        # version history
 ```
 
 ## FAQ
@@ -181,7 +216,7 @@ Not unless you ask. The default run is discovery only: read everything, modify n
 <details>
 <summary><b>What about false positives?</b></summary>
 
-Every candidate finding is attacked before it's reported: is there a guard upstream? Is the check enforced elsewhere? Is that dead code actually unreachable? Findings that can't be pinned to a `file:line` or `URL + selector` are dropped. Plausible-but-wrong rows destroy trust in the whole list, so they don't make it.
+Every candidate finding is verified against the real code before it's reported: is there a guard upstream? Is the check enforced elsewhere? Is that dead code actually unreachable? Does the test pass? Findings that can't be pinned to a `file:line` or `URL + selector` are dropped. The verification is evidence-gathering, not an attempt to argue the finding away (a located, uncleared security risk is reported, not dismissed), so the list stays both trustworthy and honest about what it can't fully rule out.
 </details>
 
 <details>
@@ -205,7 +240,7 @@ Same methodology, two packagings. <code>production-audit/SKILL.md</code> + its r
 <details>
 <summary><b>How do I know it actually converged instead of just stopping?</b></summary>
 
-The skill keeps a pass ledger (pass number, lens used, new findings count) and is only allowed to stop when two consecutive passes from <i>different</i> lenses add zero new rows. Ten quiet sweeps of the same lens count as one angle, not ten. After fixes, the bar is two consecutive passes with zero CRITICAL/HIGH.
+The skill keeps a pass ledger (pass number, lens used, new findings count) and is only allowed to stop when two consecutive passes from <i>different</i> lenses add zero new rows. Ten quiet sweeps of the same lens count as one angle, not ten. After fixes, the bar is two consecutive passes with zero CRITICAL/HIGH. To be precise about the claim: convergence is a strong "we looked hard enough" heuristic with a hard pass cap, not a mathematical proof that nothing remains (see <a href="#limitations">Limitations</a>).
 </details>
 
 ## Philosophy

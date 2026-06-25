@@ -1,0 +1,12 @@
+{
+  "name": "production-audit",
+  "description": "Exhaustive production-readiness audit: diverse-angle discovery passes to convergence, evidence-grounded per-finding verification, claim-vs-code checks, one flat severity-tagged list with file:line evidence.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Apoorv Jain"
+  },
+  "homepage": "https://github.com/apoorvjain25/production-audit",
+  "repository": "https://github.com/apoorvjain25/production-audit",
+  "license": "MIT",
+  "keywords": ["audit", "code-review", "security", "production-readiness", "convergence", "claim-vs-code"]
+}
