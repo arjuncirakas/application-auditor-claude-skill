@@ -1,0 +1,14 @@
+{
+  "name": "arjuncirakas",
+  "owner": {
+    "name": "Arjun"
+  },
+  "plugins": [
+    {
+      "name": "application-auditor",
+      "source": "./",
+      "skills": ["./application-auditor"],
+      "description": "Exhaustive production-readiness audit: mechanical tools + diverse-angle discovery to convergence, evidence-grounded per-finding verification, localhost runtime testing, claim-vs-code checks, one flat severity-tagged list with file:line evidence."
+    }
+  ]
+}

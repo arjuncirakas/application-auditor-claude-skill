@@ -1,0 +1,12 @@
+{
+  "name": "application-auditor",
+  "description": "Exhaustive production-readiness audit: mechanical tools + diverse-angle discovery to convergence, evidence-grounded per-finding verification, localhost runtime testing, claim-vs-code checks, one flat severity-tagged list with file:line evidence.",
+  "version": "1.2.0",
+  "author": {
+    "name": "Arjun"
+  },
+  "homepage": "https://github.com/arjuncirakas/application-auditor-claude-skill",
+  "repository": "https://github.com/arjuncirakas/application-auditor-claude-skill",
+  "license": "MIT",
+  "keywords": ["audit", "code-review", "security", "production-readiness", "convergence", "claim-vs-code", "runtime-testing"]
+}
